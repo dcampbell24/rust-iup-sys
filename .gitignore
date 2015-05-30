@@ -1,0 +1,5 @@
+*.bak
+*.swp
+target/
+Cargo.lock
+examples/test.rs
