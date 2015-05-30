@@ -1,6 +1,7 @@
 IUP-SYS Rust
 =============
 
+[![Build Status](https://travis-ci.org/dcampbell24/rust-iup-sys.svg)](https://travis-ci.org/dcampbell24/rust-iup-sys)
 [![Crates.io](https://img.shields.io/crates/v/iup-sys.svg)](https://crates.io/crates/iup-sys)
 
 These are low level Rust bindings to [IUP](http://webserver2.tecgraf.puc-rio.br/iup/).
