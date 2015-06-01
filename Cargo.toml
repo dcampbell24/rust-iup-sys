@@ -8,7 +8,7 @@ license = "MIT"
 links = "IUP"
 name = "iup-sys"
 repository = "https://github.com/dcampbell24/rust-iup-sys"
-version = "0.0.2"
+version = "0.0.3"
 
 [lib]
 name = "iup_sys"
