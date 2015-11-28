@@ -3,7 +3,6 @@ env:
 language: rust
 
 install:
-	
   - sudo apt-get install libgtk-3-dev
   # Build and install from source lib iup
   # make in iup exit code is 2 even if it builds the needed library ./lib/libiup.so
