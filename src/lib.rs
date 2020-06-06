@@ -7,6 +7,19 @@
 //!
 //! 1. C function-like macros have been converted into functions.
 //! 2. Items that were marked as old or deprecated have been removed.
+//!
+//! Items added between version 3.12 (2014-11-20) and current 3.29 are in lines starting with /**/
+//!
+//! WARNING about potential hazard when using this binding with unknown versions of libiup.so/iup.dll,
+//! (ABI incompatibility):
+//! 2 functions were detected, that changed their signature. Therefore conservatively those are accessible with
+//! this binding only when defining the attribute warningABI in file build.rs (conditional compilation).
+//!
+//! If You don't need to use these functions, then there is no problem anyway, keep them unavailable.
+//! If You need only function IupGetText, then You are save using binaries compiled from souce version 3.17 and upwards,
+//! and can savely uncomment the respective line in file build.rs.
+//! If You (also) need function IupElementPropertiesDialog, then You are save only with binaries compiled from
+//! C souce version 3.28 and later.
 
 // This file is based on iup.h. If you update this file, please follow the same
 // formatting and ordering as found in iup.h to make comparison easy.
@@ -22,11 +35,11 @@ extern crate libc;
 use libc::{ c_char, c_uchar, c_int, c_float, c_double, c_void };
 
 pub const IUP_NAME: &'static str         = "IUP - Portable User Interface";
-pub const IUP_COPYRIGHT: &'static str    = "Copyright (C) 1994-2014 Tecgraf, PUC-Rio.";
-pub const IUP_DESCRIPTION: &'static str  = "Multi-platform toolkit for building graphical user interfaces.";
-pub const IUP_VERSION: &'static str      = "3.12"; /* bug fixes are reported only by IupVersion functions */
-pub const IUP_VERSION_NUMBER: c_int      = 312000;
-pub const IUP_VERSION_DATE: &'static str = "2014/11/19"; /* does not include bug fix releases */
+pub const IUP_DESCRIPTION: &'static str  = "Multi-platform Toolkit for Building Graphical User Interfaces";
+pub const IUP_COPYRIGHT: &'static str    = "Copyright (C) 1994-2020 Tecgraf/PUC-Rio";
+pub const IUP_VERSION: &'static str      = "3.29"; /* bug fixes are reported only by IupVersion functions */
+pub const IUP_VERSION_NUMBER: c_int      = 329000;
+pub const IUP_VERSION_DATE: &'static str = "2020/05/18"; /* does not include bug fix releases */
 
 pub enum Ihandle {}
 pub type Icallback = extern fn(ih: *mut Ihandle) -> c_int;
@@ -38,6 +51,8 @@ extern {
     /************************************************************************/
     pub fn IupOpen(argc: *const c_int, argv: *const *const *const c_char) -> c_int;
     pub fn IupClose();
+/**/pub fn IupIsOpened() -> c_int;
+
     pub fn IupImageLibOpen();
 
     pub fn IupMainLoop() -> c_int;
@@ -46,6 +61,7 @@ extern {
     pub fn IupMainLoopLevel() -> c_int;
     pub fn IupFlush();
     pub fn IupExitLoop();
+/**/pub fn IupPostMessage(ih: *mut Ihandle, s: *const c_char, i: c_int, d: c_double, p: *mut c_void);
 
     pub fn IupRecordInput(filename: *const c_char, mode: c_int) -> c_int;
     pub fn IupPlayInput(filename: *const c_char) -> c_int;
@@ -56,13 +72,18 @@ extern {
     pub fn IupRefresh(ih: *mut Ihandle);
     pub fn IupRefreshChildren(ih: *mut Ihandle);
 
+/**/pub fn IupExecute(filename: *const c_char, parameters: *const c_char) -> c_int;
+/**/pub fn IupExecuteWait(filename: *const c_char, parameters: *const c_char) -> c_int;
     pub fn IupHelp(url: *const c_char) -> c_int;
+/**/pub fn IupLog(r#type: *const c_char, format: *const c_char, ...);
+
     pub fn IupLoad(filename: *const c_char) -> *mut c_char;
     pub fn IupLoadBuffer(buffer: *const c_char) -> *mut c_char;
 
     pub fn IupVersion() -> *mut c_char;
     pub fn IupVersionDate() -> *mut c_char;
     pub fn IupVersionNumber() -> c_int;
+/**/pub fn IupVersionShow();
 
     pub fn IupSetLanguage(lng: *const c_char);
     pub fn IupGetLanguage() -> *mut c_char;
@@ -94,6 +115,7 @@ extern {
 
     pub fn IupResetAttribute(ih: *mut Ihandle, name: *const c_char);
     pub fn IupGetAllAttributes(ih: *mut Ihandle, names: *mut *mut c_char, n: c_int) -> c_int;
+/**/pub fn IupCopyAttributes(src_ih: *mut Ihandle, dst_ih: *mut Ihandle);
     pub fn IupSetAtt(handle_name: *const c_char, ih: *mut Ihandle, name: *const c_char, ...) -> *mut Ihandle;
     pub fn IupSetAttributes(ih: *mut Ihandle, str: *const c_char) -> *mut Ihandle;
     pub fn IupGetAttributes(ih: *mut Ihandle) -> *mut c_char;
@@ -105,6 +127,7 @@ extern {
     pub fn IupSetFloat(ih: *mut Ihandle, name: *const c_char, value: c_float);
     pub fn IupSetDouble(ih: *mut Ihandle, name: *const c_char, value: c_double);
     pub fn IupSetRGB(ih: *mut Ihandle, name: *const c_char, r: c_uchar, g: c_uchar, b: c_uchar);
+/**/pub fn IupSetRGBA(ih: *mut Ihandle, name: *const c_char, r: c_uchar, g: c_uchar, b: c_uchar, a: c_uchar);
 
     pub fn IupGetAttribute(ih: *mut Ihandle, name: *const c_char) -> *mut c_char;
     pub fn IupGetInt(ih: *mut Ihandle, name: *const c_char) -> c_int;
@@ -113,6 +136,8 @@ extern {
     pub fn IupGetFloat(ih: *mut Ihandle, name: *const c_char) -> c_float;
     pub fn IupGetDouble(ih: *mut Ihandle, name: *const c_char) -> c_double;
     pub fn IupGetRGB(ih: *mut Ihandle, name: *const c_char, r: *mut c_uchar, g: *mut c_uchar, b: *mut c_uchar);
+/**/pub fn IupGetRGBA(ih: *mut Ihandle, name: *const c_char, r: *mut c_uchar, g: *mut c_uchar, b: *mut c_uchar, a: *mut c_uchar);
+
     pub fn IupSetAttributeId(ih: *mut Ihandle, name: *const c_char, id: c_int, value: *const c_char);
     pub fn IupSetStrAttributeId(ih: *mut Ihandle, name: *const c_char, id: c_int, value: *const c_char);
     pub fn IupSetStrfId(ih: *mut Ihandle, name: *const c_char, id: c_int, format: *const c_char, ...);
@@ -165,6 +190,10 @@ extern {
 
     pub fn IupSetAttributeHandle(ih: *mut Ihandle, name: *const c_char, ih_named: *mut Ihandle);
     pub fn IupGetAttributeHandle(ih: *mut Ihandle, name: *const c_char) -> *mut Ihandle;
+/**/pub fn IupSetAttributeHandleId(ih: *mut Ihandle, name: *const c_char, id: c_int, ih_named: *mut Ihandle);
+/**/pub fn IupGetAttributeHandleId(ih: *mut Ihandle, name: *const c_char, id: c_int) -> *mut Ihandle;
+/**/pub fn IupSetAttributeHandleId2(ih: *mut Ihandle, name: *const c_char, lin: c_int, col: c_int, ih_named: *mut Ihandle);
+/**/pub fn IupGetAttributeHandleId2(ih: *mut Ihandle, name: *const c_char, lin: c_int, col: c_int) -> *mut Ihandle;
 
     pub fn IupGetClassName(ih: *mut Ihandle) -> *mut c_char;
     pub fn IupGetClassType(ih: *mut Ihandle) -> *mut c_char;
@@ -184,6 +213,8 @@ extern {
     /*                        Elements                                      */
     /************************************************************************/
     pub fn IupFill() -> *mut Ihandle;
+/**/pub fn IupSpace() -> *mut Ihandle;
+
     pub fn IupRadio(child: *mut Ihandle) -> *mut Ihandle;
     pub fn IupVbox(child: *mut Ihandle, ...) -> *mut Ihandle;
     pub fn IupVboxv(children: *mut *mut Ihandle) -> *mut Ihandle;
@@ -200,17 +231,21 @@ extern {
     pub fn IupSbox(child: *mut Ihandle) -> *mut Ihandle;
     pub fn IupSplit(child1: *mut Ihandle, child2: *mut Ihandle) -> *mut Ihandle;
     pub fn IupScrollBox(child: *mut Ihandle) -> *mut Ihandle;
+/**/pub fn IupFlatScrollBox(child: *mut Ihandle) -> *mut Ihandle;
     pub fn IupGridBox(child: *mut Ihandle, ...) -> *mut Ihandle;
     pub fn IupGridBoxv(children: *mut *mut Ihandle) -> *mut Ihandle;
+/**/pub fn IupMultiBox(child: *mut Ihandle, ...) -> *mut Ihandle;
+/**/pub fn IupMultiBoxv(children: *mut *mut Ihandle) -> *mut Ihandle;
     pub fn IupExpander(child: *mut Ihandle) -> *mut Ihandle;
     pub fn IupDetachBox(child: *mut Ihandle) -> *mut Ihandle;
     pub fn IupBackgroundBox(child: *mut Ihandle) -> *mut Ihandle;
 
     pub fn IupFrame(child: *mut Ihandle) -> *mut Ihandle;
+/**/pub fn IupFlatFrame(child: *mut Ihandle) -> *mut Ihandle;
 
-    pub fn IupImage(width: c_int, height: c_int, pixmap: *const c_uchar) -> *mut Ihandle;
-    pub fn IupImageRGB(width: c_int, height: c_int, pixmap: *const c_uchar) -> *mut Ihandle;
-    pub fn IupImageRGBA(width: c_int, height: c_int, pixmap: *const c_uchar) -> *mut Ihandle;
+    pub fn IupImage(width: c_int, height: c_int, pixels: *const c_uchar) -> *mut Ihandle;
+    pub fn IupImageRGB(width: c_int, height: c_int, pixels: *const c_uchar) -> *mut Ihandle;
+    pub fn IupImageRGBA(width: c_int, height: c_int, pixels: *const c_uchar) -> *mut Ihandle;
 
     pub fn IupItem(title: *const c_char, action: *const c_char) -> *mut Ihandle;
     pub fn IupSubmenu(title: *const c_char, child: *mut Ihandle) -> *mut Ihandle;
@@ -219,29 +254,50 @@ extern {
     pub fn IupMenuv(children: *mut *mut Ihandle) -> *mut Ihandle;
 
     pub fn IupButton(title: *const c_char, action: *const c_char) -> *mut Ihandle;
+/**/pub fn IupFlatButton(title: *const c_char) -> *mut Ihandle;
+/**/pub fn IupFlatToggle(title: *const c_char) -> *mut Ihandle;
+/**/pub fn IupDropButton(dropchild: *mut Ihandle) -> *mut Ihandle;
+/**/pub fn IupFlatLabel(title: *const c_char) -> *mut Ihandle;
+/**/pub fn IupFlatSeparator() -> *mut Ihandle;
     pub fn IupCanvas(action: *const c_char) -> *mut Ihandle;
     pub fn IupDialog(child: *mut Ihandle) -> *mut Ihandle;
     pub fn IupUser() -> *mut Ihandle;
+/**/pub fn IupThread() -> *mut Ihandle;
     pub fn IupLabel(title: *const c_char) -> *mut Ihandle;
     pub fn IupList(action: *const c_char) -> *mut Ihandle;
+/**/pub fn IupFlatList() -> *mut Ihandle;
     pub fn IupText(action: *const c_char) -> *mut Ihandle;
     pub fn IupMultiLine(action: *const c_char) -> *mut Ihandle;
     pub fn IupToggle(title: *const c_char, action: *const c_char) -> *mut Ihandle;
     pub fn IupTimer() -> *mut Ihandle;
     pub fn IupClipboard() -> *mut Ihandle;
     pub fn IupProgressBar() -> *mut Ihandle;
-    pub fn IupVal(_type: *const c_char) -> *mut Ihandle;
+    pub fn IupVal(r#type: *const c_char) -> *mut Ihandle;
+/**/pub fn IupFlatVal(r#type: *const c_char) -> *mut Ihandle;
+/**/pub fn IupFlatTree() -> *mut Ihandle;
     pub fn IupTabs(child: *mut Ihandle, ...) -> *mut Ihandle;
     pub fn IupTabsv(children: *mut *mut Ihandle) -> *mut Ihandle;
+/**/pub fn IupFlatTabs(first: *mut Ihandle, ...) -> *mut Ihandle;
+/**/pub fn IupFlatTabsv(children: *mut *mut Ihandle) -> *mut Ihandle;
     pub fn IupTree() -> *mut Ihandle;
     pub fn IupLink(url: *const c_char, title: *const c_char) -> *mut Ihandle;
+/**/pub fn IupAnimatedLabel(animation: *mut Ihandle) -> *mut Ihandle;
+/**/pub fn IupDatePick() -> *mut Ihandle;
+/**/pub fn IupCalendar() -> *mut Ihandle;
+/**/pub fn IupColorbar() -> *mut Ihandle;
+/**/pub fn IupGauge() -> *mut Ihandle;
+/**/pub fn IupDial(r#type: *const c_char) -> *mut Ihandle;
+/**/pub fn IupColorBrowser() -> *mut Ihandle;
 
     /************************************************************************/
     /*                      Utilities                                       */
     /************************************************************************/
+    /* String compare utility */
+/**/pub fn IupStringCompare(str1: *const c_char, str2: *const c_char, casesensitive: c_int, lexicographic: c_int) -> c_int;
 
-    /* IupImage utility */
-    pub fn IupSaveImageAsText(ih: *mut Ihandle, file_name: *const c_char, format: *const c_char, name: *const c_char) -> c_int;
+    /* IupImage utilities */
+    pub fn IupSaveImageAsText(ih: *mut Ihandle, filename: *const c_char, format: *const c_char, name: *const c_char) -> c_int;
+/**/pub fn IupImageGetHandle(name: *const c_char) -> *mut Ihandle;
 
     /* IupText and IupScintilla utilities */
     pub fn IupTextConvertLinColToPos(ih: *mut Ihandle, lin: c_int, col: c_int, pos: *mut c_int);
@@ -250,10 +306,11 @@ extern {
     /* IupText, IupList, IupTree, IupMatrix and IupScintilla utility */
     pub fn IupConvertXYToPos(ih: *mut Ihandle, x: c_int, y: c_int) -> c_int;
 
-    /* IupTree utilities */
+    /* IupTree and IupFlatTree utilities (work for both) */
     pub fn IupTreeSetUserId(ih: *mut Ihandle, id: c_int, userid: *mut c_void) -> c_int;
     pub fn IupTreeGetUserId(ih: *mut Ihandle, id: c_int) -> *mut c_void;
     pub fn IupTreeGetId(ih: *mut Ihandle, userid: *mut c_void) -> c_int;
+    #[deprecated(since = "3.21", note = "use IupSetAttributeHandleId")]
     pub fn IupTreeSetAttributeHandle(ih: *mut Ihandle, name: *const c_char, id: c_int, ih_named: *mut Ihandle);
 
     /************************************************************************/
@@ -268,18 +325,27 @@ extern {
     pub fn IupGetFile(arq: *mut c_char) -> c_int;
     pub fn IupMessage(title: *const c_char, msg: *const c_char);
     pub fn IupMessagef(title: *const c_char, format: *const c_char, ...);
+/**/pub fn IupMessageError(parent: *mut Ihandle, message: *const c_char);
+/**/pub fn IupMessageAlarm(parent: *mut Ihandle, title: *const c_char, message: *const c_char, buttons: *const c_char) -> c_int;
     pub fn IupAlarm(title: *const c_char, msg: *const c_char, b1: *const c_char, b2: *const c_char, b3: *const c_char) -> c_int;
     pub fn IupScanf(format: *const c_char, ...) -> c_int;
-    pub fn IupListDialog(_type: c_int, title: *const c_char, size: c_int, list: *mut *const c_char, op: c_int, max_col: c_int, max_lin: c_int, marks: *mut c_int) -> c_int;
-    pub fn IupGetText(title: *const c_char, text: *mut c_char) -> c_int;
+    pub fn IupListDialog(r#type: c_int, title: *const c_char, size: c_int, list: *mut *const c_char, op: c_int, max_col: c_int, max_lin: c_int, marks: *mut c_int) -> c_int;
+    #[cfg(warningABI)] // signature of IupGetText changed from 3.16 -> 3.17 : 1 parameter got added
+    pub fn IupGetText(title: *const c_char, text: *mut c_char, maxsize: c_int) -> c_int;
     pub fn IupGetColor(x: c_int, y: c_int, r: *mut c_uchar, g: *mut c_uchar, b: *mut c_uchar) -> c_int;
 
     pub fn IupGetParam(title: *const c_char, action: Iparamcb, user_data: *mut c_void, format: *const c_char, ...) -> c_int;
     pub fn IupGetParamv(title: *const c_char, action: Iparamcb, user_data: *mut c_void, format: *const c_char, param_count: c_int, param_extra: c_int, param_data: *mut *mut c_void) -> c_int;
+/**/pub fn IupParam(format: *const c_char) -> *mut Ihandle;
+/**/pub fn IupParamBox(param: *mut Ihandle, ...) -> *mut Ihandle;
+/**/pub fn IupParamBoxv(param_array: *mut *mut Ihandle) -> *mut Ihandle;
 
     pub fn IupLayoutDialog(dialog: *mut Ihandle) -> *mut Ihandle;
-    pub fn IupElementPropertiesDialog(elem: *mut Ihandle) -> *mut Ihandle;
-}
+    #[cfg(warningABI)] // signature of IupElementPropertiesDialog changed from 3.27 -> 3.28 : 1 parameter got added
+    pub fn IupElementPropertiesDialog(parent: *mut Ihandle, elem: *mut Ihandle) -> *mut Ihandle;
+/**/pub fn IupGlobalsDialog() -> *mut Ihandle;
+/**/pub fn IupClassInfoDialog(parent: *mut Ihandle) -> *mut Ihandle;
+} // extern
 
 /************************************************************************/
 /*                   Common Flags and Return Values                     */
@@ -307,8 +373,12 @@ pub const IUP_RIGHT: c_int        = 0xFFFD;  /* 65533 */
 pub const IUP_MOUSEPOS: c_int     = 0xFFFC;  /* 65532 */
 pub const IUP_CURRENT: c_int      = 0xFFFB;  /* 65531 */
 pub const IUP_CENTERPARENT: c_int = 0xFFFA;  /* 65530 */
+/**/pub const IUP_LEFTPARENT: c_int   = 0xFFF9;  /* 65529 */
+/**/pub const IUP_RIGHTPARENT: c_int  = 0xFFF8;  /* 65528 */
 pub const IUP_TOP: c_int          = IUP_LEFT;
 pub const IUP_BOTTOM: c_int       = IUP_RIGHT;
+/**/pub const IUP_TOPPARENT: c_int    = IUP_LEFTPARENT;
+/**/pub const IUP_BOTTOMPARENT: c_int = IUP_RIGHTPARENT;
 
 /************************************************************************/
 /*               SHOW_CB Callback Values                                */
@@ -368,22 +438,36 @@ pub unsafe fn iup_isbutton5(s: *const c_char) -> bool { *s.offset(9) == '5' as c
 /************************************************************************/
 /*                      Pre-Defined Masks                               */
 /************************************************************************/
-pub const IUP_MASK_FLOAT: &'static str  = "[+/-]?(/d+/.?/d*|/./d+)";
-pub const IUP_MASK_UFLOAT: &'static str = "(/d+/.?/d*|/./d+)";
-pub const IUP_MASK_EFLOAT: &'static str = "[+/-]?(/d+/.?/d*|/./d+)([eE][+/-]?/d+)?";
-pub const IUP_MASK_INT: &'static str    = "[+/-]?/d+";
-pub const IUP_MASK_UINT: &'static str   = "/d+";
+pub const IUP_MASK_FLOAT: &'static str       = "[+/-]?(/d+/.?/d*|/./d+)";
+pub const IUP_MASK_UFLOAT: &'static str      =       "(/d+/.?/d*|/./d+)";
+pub const IUP_MASK_EFLOAT: &'static str      = "[+/-]?(/d+/.?/d*|/./d+)([eE][+/-]?/d+)?";
+/**/pub const IUP_MASK_UEFLOAT: &'static str     =       "(/d+/.?/d*|/./d+)([eE][+/-]?/d+)?";
+/**/pub const IUP_MASK_FLOATCOMMA: &'static str  = "[+/-]?(/d+/,?/d*|/,/d+)";
+/**/pub const IUP_MASK_UFLOATCOMMA: &'static str =       "(/d+/,?/d*|/,/d+)";
+pub const IUP_MASK_INT: &'static str         =  "[+/-]?/d+";
+pub const IUP_MASK_UINT: &'static str        =        "/d+";
 
 /************************************************************************/
 /*                   IupGetParam Callback situations                    */
 /************************************************************************/
-pub const IUP_GETPARAM_OK: c_int     = -1;
-pub const IUP_GETPARAM_INIT: c_int   = -2;
-pub const IUP_GETPARAM_CANCEL: c_int = -3;
-pub const IUP_GETPARAM_HELP: c_int   = -4;
+/**/pub const IUP_GETPARAM_BUTTON1: c_int = -1;
+pub const IUP_GETPARAM_INIT: c_int    = -2;
+/**/pub const IUP_GETPARAM_BUTTON2: c_int = -3;
+/**/pub const IUP_GETPARAM_BUTTON3: c_int = -4;
+/**/pub const IUP_GETPARAM_CLOSE: c_int   = -5;
+/**/pub const IUP_GETPARAM_MAP: c_int     = -6;
+pub const IUP_GETPARAM_OK: c_int      = IUP_GETPARAM_BUTTON1;
+pub const IUP_GETPARAM_CANCEL: c_int  = IUP_GETPARAM_BUTTON2;
+pub const IUP_GETPARAM_HELP: c_int    = IUP_GETPARAM_BUTTON3;
+
+/************************************************************************/
+/*                   Used by IupColorbar                                */
+/************************************************************************/
+/**/pub const IUP_PRIMARY: c_int   = -1;
+/**/pub const IUP_SECONDARY: c_int = -2;
 
 /************************************************************************/
 /*                   Record Input Modes                                 */
 /************************************************************************/
 pub const IUP_RECBINARY: c_int = 0;
-pub const IUP_RECTEXT: c_int = 1;
+pub const IUP_RECTEXT: c_int   = 1;
