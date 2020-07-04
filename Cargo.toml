@@ -1,17 +1,19 @@
 [package]
-authors = ["David Campbell <dcampbell24@gmail.com>"]
+authors = ["David Campbell <dcampbell24@gmail.com>",
+           "Denilson M. Amorim <dma_2012@hotmail.com>",
+           "Carsten Blüggel <bluecars@posteo.eu>"]
 build = "build.rs"
 description = "Raw IUP bindings for Rust"
 homepage = "https://github.com/dcampbell24/rust-iup-sys"
 keywords = ["bindings", "gui", "iup"]
 license = "MIT"
-links = "IUP"
+links = "iup"
 name = "iup-sys"
 repository = "https://github.com/dcampbell24/rust-iup-sys"
-version = "0.0.3"
+version = "0.0.4"
 
 [lib]
 name = "iup_sys"
 
-[dependencies]
-libc = "0.1"
+[build-dependencies]
+#libloading = "0.6"
