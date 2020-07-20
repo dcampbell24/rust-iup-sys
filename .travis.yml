@@ -1,3 +1,4 @@
+sudo: true
 dist: bionic
 env:
   global:
@@ -6,6 +7,7 @@ env:
 language: rust
 
 install:
+  - sudo apt-get -y install libc6-dev
   # Download and install IUP
   - mkdir iup_libs/
   - wget $IUP_DL -O iup_libs.tar.gz
@@ -13,7 +15,10 @@ install:
   # By piping a newline to ./install, we skip the enter prompt
   - (cd iup_libs/ && echo -ne '\n' | sudo ./install)
   - sudo cp iup_libs/ftgl/lib/Linux415_64/libftgl.so /usr/lib/
-  - sudo ldconfig /usr/lib
+  - sudo ldconfig /usr/lib/
+  - sudo ldconfig -p
+  - ls -lh /usr/lib/libiup*
+  - ls -lh /usr/lib/libftgl.so
   - rm -rf iup_libs/
 
 script:
