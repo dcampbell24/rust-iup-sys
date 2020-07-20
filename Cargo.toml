@@ -16,4 +16,4 @@ version = "0.0.4"
 name = "iup_sys"
 
 [build-dependencies]
-#libloading = "0.6"
+libloading = "0.6"

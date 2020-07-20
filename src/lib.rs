@@ -2,20 +2,28 @@
 //!
 //! [1]: https://webserver2.tecgraf.puc-rio.br/iup/
 //!
-//! These bindings follow what is found in iup.h (and soon other header files) of IUP source version 3.29 as closely
+//! These bindings follow what is found in iup.h and other header files of IUP source version 3.29 as closely
 //! as possible with the following exceptions:
 //!
 //! 1. C function-like macros have been converted into functions.
 //! 2. Items that were marked as old or deprecated have been removed or explicitely are marked as #[deprecated(...)].
+//! 3. Paramater names occasionally are taken from the documentation web site, if those are better fits
 //!
-//! No header file before version 3.12 got inspected. The following covers version 3.12 (2014-11-20) until current 3.29.
-//! With a new build.rs (to be released), the binding will allow to safely call into that range of IUP library binary
-//! versions.
+//! As an exception, iuh.h header file has been inspected since version 3.12 (, other header files since 3.29).
+//! That entails different levels of support, provided that the "version detection mechanism" in build.rs is working:
+//! "Full support" within the range of IUP version 3.19 (2016-06-29) up to current 3.29 (2020-05-19):
+//!   The binding matches the IUP library binaries installed, except functions from other headers missing before 3.29,
+//!   thus there shouldn't occur any link error referring to IUP or it's either a binding bug or a missing specification
+//!   where the linker shall look for IUP binaries.
+//! "Limited support" within the range of IUP version 3.12 (2014-11-19) up to 3.18 (2016-03-21):
+//!   The binding doesn't match the IUP library binaries installed, but prevents calling wrong function signatures.
+//!   Link errors may occur (for function declarations, that aren't implemented in binaries).
 //!
-//! WARNING about potential hazard when using this binding with unconsidered versions of libiup.so/libiup.a/iup.dll/
-//! iup.lib, (ABI incompatibility):
-//! 3 functions were detected, that changed their signature (there may be more before 3.12).
-//! Therefore conservatively those are accessible with this binding only - at Your own risk/check whether appropriate -
+//! WARNING about potential hazard when using this binding with dysfunctional or non-existant build.rs
+//! (no version detection)  or with unconsidered versions of libiup.so/libiup.a/iup.dll/iup.lib, (ABI incompatibility):
+//! 3 functions were detected, that changed their signature (between v3.12 and v3.29, there may be more before v3.12).
+//! It's safe to use this binding with binary versions detected within the range of 3.12 - 3.29, otherwise,
+//! conservatively those 3 functions are accessible with this binding only - at Your own risk/check whether appropriate -
 //! when defining the attribute warningABI in file build.rs (conditional compilation).
 
 // This file is based on iup.h. If you update this file, please follow the same
@@ -24,21 +32,97 @@
 // The IUP library this header file is derived from is a Tecgraf product under a MIT style license.
 // See LICENSE-TECGRAF for the full license.
 
+#![allow(clippy::missing_safety_doc)]
 
 use std::os::raw::{ c_char, c_uchar, c_int, c_float, c_double, c_void };
 
 /****************************************************************************/
-// #include "iupkey.h"
+#[cfg(all(installedCD, any(v3_29, v3_30)))]
+#[allow(non_camel_case_types)]
+pub enum cdContext {} // required by mod draw_cd and originally declared there
+#[cfg(all(installedCD, any(v3_29, v3_30)))]
+#[allow(non_camel_case_types)]
+pub enum cdCanvas {} // required by mod plot and originally declared there
+#[cfg(IM_API)]
+#[allow(non_camel_case_types)]
+pub enum imImage {} // used in mod im
+
+// #include "iupcbs.h"
+// #include "iup_class_cbs.hpp"
 // #include "iupdef.h"
+// #include "iup_export.h"
+// #include "iup_plus.h"
+// #include "iup_varg.h"
+
+// #include "iup_config.h"
+#[cfg(any(v3_29, v3_30))]
+pub mod config;
+
+// #include "iupcontrols.h"
+#[cfg(all(installedCD, any(v3_29, v3_30)))]
+pub mod controls;
+
+// #include "iupdraw_cd.h"
+#[cfg(all(installedCD, any(v3_29, v3_30)))]
+pub mod draw_cd;
+
+// #include "iupdraw.h"
+#[cfg(any(v3_29, v3_30))]
+pub mod draw;
+
+// #include "iupfiledlg.h"
+#[cfg(all(windows, any(v3_29, v3_30)))]
+pub mod filedlg;
+
+// #include "iupglcontrols.h"
+#[cfg(all(installedFTGL, any(v3_29, v3_30)))]
+pub mod glcontrols;
+
+// #include "iupgl.h"
+#[cfg(any(v3_29, v3_30))]
+pub mod gl;
+
+// #include "iupim.h"
+#[cfg(all(installedIM, any(v3_29, v3_30)))]
+pub mod im;
+
+// #include "iupkey.h"
+#[cfg(any(v3_29, v3_30))]
+pub mod key;
+
+// #include "iup_mglplot.h"
+#[cfg(any(v3_29, v3_30))]
+pub mod mglplot;
+
+// #include "iupole.h"
+#[cfg(all(windows, any(v3_29, v3_30)))]
+pub mod ole;
+
+// #include "iup_plot.h"
+#[cfg(all(installedCD, installedFTGL, any(v3_29, v3_30)))]
+pub mod plot;
+
+// #include "iup_scintilla.h"
+#[cfg(any(v3_29, v3_30))]
+pub mod scintilla;
+
+// #include "iuptuio.h"
+#[cfg(any(v3_29, v3_30))]
+pub mod tuio;
+
+// #include "iupweb.h"
+#[cfg(all(any(windows, installedWebkit), any(v3_29, v3_30)))]
+pub mod web;
+
 /****************************************************************************/
 // #include "iup.h"
 
-pub const IUP_NAME: &'static str         = "IUP - Portable User Interface";
-pub const IUP_DESCRIPTION: &'static str  = "Multi-platform Toolkit for Building Graphical User Interfaces";
-pub const IUP_COPYRIGHT: &'static str    = "Copyright (C) 1994-2020 Tecgraf/PUC-Rio";
-pub const IUP_VERSION: &'static str      = "3.29"; /* bug fixes are reported only by IupVersion functions */
-pub const IUP_VERSION_NUMBER: c_int      = 329000;
-pub const IUP_VERSION_DATE: &'static str = "2020/05/18"; /* does not include bug fix releases */
+pub const IUP_NAME: &str            = "IUP - Portable User Interface";
+pub const IUP_DESCRIPTION: &str     = "Multi-platform Toolkit for Building Graphical User Interfaces";
+pub const IUP_COPYRIGHT: &str       = "Copyright (C) 1994-2020 Tecgraf/PUC-Rio";
+pub const IUP_VERSION: &str         = "3.29"; /* bug fixes are reported only by IupVersion functions */
+pub const IUP_VERSION_NUMBER: c_int = 329000;
+pub const IUP_VERSION_DATE: &str    = "2020/05/18"; /* does not include bug fix releases */
 
 pub enum Ihandle {}
 pub type Icallback = extern fn(ih: *mut Ihandle) -> c_int;
@@ -50,7 +134,7 @@ extern {
     /************************************************************************/
     pub fn IupOpen(argc: *const c_int, argv: *const *const *const c_char) -> c_int;
     pub fn IupClose();
-    #[cfg(not(any(v3_27, v3_26, v3_25, v3_24, v3_23, v3_22, v3_21, v3_20, v3_19, v3_18, v3_17, v3_16, v3_15, v3_14, v3_13, v3_12)))] // since v3_28
+    #[cfg(not(any(v3_27, v3_26, v3_25, v3_24, v3_23, v3_22, v3_21, v3_20, v3_19)))] // since v3_28
     pub fn IupIsOpened() -> c_int;
 
     pub fn IupImageLibOpen();
@@ -61,7 +145,7 @@ extern {
     pub fn IupMainLoopLevel() -> c_int;
     pub fn IupFlush();
     pub fn IupExitLoop();
-    #[cfg(not(any(v3_27, v3_26, v3_25, v3_24, v3_23, v3_22, v3_21, v3_20, v3_19, v3_18, v3_17, v3_16, v3_15, v3_14, v3_13, v3_12)))] // since v3_28
+    #[cfg(not(any(v3_27, v3_26, v3_25, v3_24, v3_23, v3_22, v3_21, v3_20, v3_19)))] // since v3_28
     pub fn IupPostMessage(ih_addressee: *mut Ihandle, s: *const c_char, i: c_int, d: c_double, p: *mut c_void);
 
     pub fn IupRecordInput(filename: *const c_char, mode: c_int) -> c_int;
@@ -73,12 +157,11 @@ extern {
     pub fn IupRefresh(ih: *mut Ihandle);
     pub fn IupRefreshChildren(ih: *mut Ihandle);
 
-    #[cfg(not(any(v3_16, v3_15, v3_14, v3_13, v3_12)))] // since v3_17
-    pub fn IupExecute(filename: *const c_char, parameters: *const c_char) -> c_int;
-    #[cfg(not(any(v3_19, v3_18, v3_17, v3_16, v3_15, v3_14, v3_13, v3_12)))] // since v3_20
+    pub fn IupExecute(filename: *const c_char, parameters: *const c_char) -> c_int; // since v3_17
+    #[cfg(not(any(v3_19)))] // since v3_20
     pub fn IupExecuteWait(filename: *const c_char, parameters: *const c_char) -> c_int;
     pub fn IupHelp(url: *const c_char) -> c_int;
-    #[cfg(not(any(v3_22, v3_21, v3_20, v3_19, v3_18, v3_17, v3_16, v3_15, v3_14, v3_13, v3_12)))] // since v3_23
+    #[cfg(not(any(v3_22, v3_21, v3_20, v3_19)))] // since v3_23
     pub fn IupLog(r#type: *const c_char, format: *const c_char, ...);
 
     pub fn IupLoad(filename: *const c_char) -> *mut c_char;
@@ -87,7 +170,7 @@ extern {
     pub fn IupVersion() -> *mut c_char;
     pub fn IupVersionDate() -> *mut c_char;
     pub fn IupVersionNumber() -> c_int;
-    #[cfg(not(any(v3_27, v3_26, v3_25, v3_24, v3_23, v3_22, v3_21, v3_20, v3_19, v3_18, v3_17, v3_16, v3_15, v3_14, v3_13, v3_12)))] // since v3_28
+    #[cfg(not(any(v3_27, v3_26, v3_25, v3_24, v3_23, v3_22, v3_21, v3_20, v3_19)))] // since v3_28
     pub fn IupVersionShow();
 
     pub fn IupSetLanguage(lng: *const c_char);
@@ -120,7 +203,7 @@ extern {
 
     pub fn IupResetAttribute(ih: *mut Ihandle, name: *const c_char);
     pub fn IupGetAllAttributes(ih: *mut Ihandle, names: *mut *mut c_char, n: c_int) -> c_int;
-    #[cfg(not(any(v3_25, v3_24, v3_23, v3_22, v3_21, v3_20, v3_19, v3_18, v3_17, v3_16, v3_15, v3_14, v3_13, v3_12)))] // since v3_26
+    #[cfg(not(any(v3_25, v3_24, v3_23, v3_22, v3_21, v3_20, v3_19)))] // since v3_26
     pub fn IupCopyAttributes(src_ih: *mut Ihandle, dst_ih: *mut Ihandle);
     pub fn IupSetAtt(handle_name: *const c_char, ih: *mut Ihandle, name: *const c_char, ...) -> *mut Ihandle;
     pub fn IupSetAttributes(ih: *mut Ihandle, str: *const c_char) -> *mut Ihandle;
@@ -133,7 +216,7 @@ extern {
     pub fn IupSetFloat(ih: *mut Ihandle, name: *const c_char, value: c_float);
     pub fn IupSetDouble(ih: *mut Ihandle, name: *const c_char, value: c_double);
     pub fn IupSetRGB(ih: *mut Ihandle, name: *const c_char, r: c_uchar, g: c_uchar, b: c_uchar);
-    #[cfg(not(any(v3_28, v3_27, v3_26, v3_25, v3_24, v3_23, v3_22, v3_21, v3_20, v3_19, v3_18, v3_17, v3_16, v3_15, v3_14, v3_13, v3_12)))] // since v3_29
+    #[cfg(not(any(v3_28, v3_27, v3_26, v3_25, v3_24, v3_23, v3_22, v3_21, v3_20, v3_19)))] // since v3_29
     pub fn IupSetRGBA(ih: *mut Ihandle, name: *const c_char, r: c_uchar, g: c_uchar, b: c_uchar, a: c_uchar);
 
     pub fn IupGetAttribute(ih: *mut Ihandle, name: *const c_char) -> *mut c_char;
@@ -143,7 +226,7 @@ extern {
     pub fn IupGetFloat(ih: *mut Ihandle, name: *const c_char) -> c_float;
     pub fn IupGetDouble(ih: *mut Ihandle, name: *const c_char) -> c_double;
     pub fn IupGetRGB(ih: *mut Ihandle, name: *const c_char, r: *mut c_uchar, g: *mut c_uchar, b: *mut c_uchar);
-    #[cfg(not(any(v3_28, v3_27, v3_26, v3_25, v3_24, v3_23, v3_22, v3_21, v3_20, v3_19, v3_18, v3_17, v3_16, v3_15, v3_14, v3_13, v3_12)))] // since v3_29
+    #[cfg(not(any(v3_28, v3_27, v3_26, v3_25, v3_24, v3_23, v3_22, v3_21, v3_20, v3_19)))] // since v3_29
     pub fn IupGetRGBA(ih: *mut Ihandle, name: *const c_char, r: *mut c_uchar, g: *mut c_uchar, b: *mut c_uchar, a: *mut c_uchar);
 
     pub fn IupSetAttributeId(ih: *mut Ihandle, name: *const c_char, id: c_int, value: *const c_char);
@@ -198,13 +281,13 @@ extern {
 
     pub fn IupSetAttributeHandle(ih: *mut Ihandle, name: *const c_char, ih_named: *mut Ihandle);
     pub fn IupGetAttributeHandle(ih: *mut Ihandle, name: *const c_char) -> *mut Ihandle;
-    #[cfg(not(any(v3_20, v3_19, v3_18, v3_17, v3_16, v3_15, v3_14, v3_13, v3_12)))] // since v3_21
+    #[cfg(not(any(v3_20, v3_19)))] // since v3_21
     pub fn IupSetAttributeHandleId(ih: *mut Ihandle, name: *const c_char, id: c_int, ih_named: *mut Ihandle);
-    #[cfg(not(any(v3_20, v3_19, v3_18, v3_17, v3_16, v3_15, v3_14, v3_13, v3_12)))] // since v3_21
+    #[cfg(not(any(v3_20, v3_19)))] // since v3_21
     pub fn IupGetAttributeHandleId(ih: *mut Ihandle, name: *const c_char, id: c_int) -> *mut Ihandle;
-    #[cfg(not(any(v3_20, v3_19, v3_18, v3_17, v3_16, v3_15, v3_14, v3_13, v3_12)))] // since v3_21
+    #[cfg(not(any(v3_20, v3_19)))] // since v3_21
     pub fn IupSetAttributeHandleId2(ih: *mut Ihandle, name: *const c_char, lin: c_int, col: c_int, ih_named: *mut Ihandle);
-    #[cfg(not(any(v3_20, v3_19, v3_18, v3_17, v3_16, v3_15, v3_14, v3_13, v3_12)))] // since v3_21
+    #[cfg(not(any(v3_20, v3_19)))] // since v3_21
     pub fn IupGetAttributeHandleId2(ih: *mut Ihandle, name: *const c_char, lin: c_int, col: c_int) -> *mut Ihandle;
 
     pub fn IupGetClassName(ih: *mut Ihandle) -> *mut c_char;
@@ -225,7 +308,7 @@ extern {
     /*                        Elements                                      */
     /************************************************************************/
     pub fn IupFill() -> *mut Ihandle;
-    #[cfg(not(any(v3_24, v3_23, v3_22, v3_21, v3_20, v3_19, v3_18, v3_17, v3_16, v3_15, v3_14, v3_13, v3_12)))] // since v3_25
+    #[cfg(not(any(v3_24, v3_23, v3_22, v3_21, v3_20, v3_19)))] // since v3_25
     pub fn IupSpace() -> *mut Ihandle;
 
     pub fn IupRadio(child: *mut Ihandle) -> *mut Ihandle;
@@ -244,20 +327,20 @@ extern {
     pub fn IupSbox(child: *mut Ihandle) -> *mut Ihandle;
     pub fn IupSplit(child1: *mut Ihandle, child2: *mut Ihandle) -> *mut Ihandle;
     pub fn IupScrollBox(child: *mut Ihandle) -> *mut Ihandle;
-    #[cfg(not(any(v3_21, v3_20, v3_19, v3_18, v3_17, v3_16, v3_15, v3_14, v3_13, v3_12)))] // since v3_22
+    #[cfg(not(any(v3_21, v3_20, v3_19)))] // since v3_22
     pub fn IupFlatScrollBox(child: *mut Ihandle) -> *mut Ihandle;
     pub fn IupGridBox(child: *mut Ihandle, ...) -> *mut Ihandle;
     pub fn IupGridBoxv(children: *mut *mut Ihandle) -> *mut Ihandle;
-    #[cfg(not(any(v3_25, v3_24, v3_23, v3_22, v3_21, v3_20, v3_19, v3_18, v3_17, v3_16, v3_15, v3_14, v3_13, v3_12)))] // since v3_26
+    #[cfg(not(any(v3_25, v3_24, v3_23, v3_22, v3_21, v3_20, v3_19)))] // since v3_26
     pub fn IupMultiBox(child: *mut Ihandle, ...) -> *mut Ihandle;
-    #[cfg(not(any(v3_25, v3_24, v3_23, v3_22, v3_21, v3_20, v3_19, v3_18, v3_17, v3_16, v3_15, v3_14, v3_13, v3_12)))] // since v3_26
+    #[cfg(not(any(v3_25, v3_24, v3_23, v3_22, v3_21, v3_20, v3_19)))] // since v3_26
     pub fn IupMultiBoxv(children: *mut *mut Ihandle) -> *mut Ihandle;
     pub fn IupExpander(child: *mut Ihandle) -> *mut Ihandle;
     pub fn IupDetachBox(child: *mut Ihandle) -> *mut Ihandle;
     pub fn IupBackgroundBox(child: *mut Ihandle) -> *mut Ihandle;
 
     pub fn IupFrame(child: *mut Ihandle) -> *mut Ihandle;
-    #[cfg(not(any(v3_19, v3_18, v3_17, v3_16, v3_15, v3_14, v3_13, v3_12)))] // since v3_20
+    #[cfg(not(any(v3_19)))] // since v3_20
     pub fn IupFlatFrame(child: *mut Ihandle) -> *mut Ihandle;
 
     pub fn IupImage(width: c_int, height: c_int, pixels: *const c_uchar) -> *mut Ihandle;
@@ -271,24 +354,23 @@ extern {
     pub fn IupMenuv(children: *mut *mut Ihandle) -> *mut Ihandle;
 
     pub fn IupButton(title: *const c_char, action: *const c_char) -> *mut Ihandle;
-    #[cfg(not(any(v3_14, v3_13, v3_12)))] // since v3_15
-    pub fn IupFlatButton(title: *const c_char) -> *mut Ihandle;
-    #[cfg(not(any(v3_24, v3_23, v3_22, v3_21, v3_20, v3_19, v3_18, v3_17, v3_16, v3_15, v3_14, v3_13, v3_12)))] // since v3_25
+    pub fn IupFlatButton(title: *const c_char) -> *mut Ihandle; // since v3_15
+    #[cfg(not(any(v3_24, v3_23, v3_22, v3_21, v3_20, v3_19)))] // since v3_25
     pub fn IupFlatToggle(title: *const c_char) -> *mut Ihandle;
-    #[cfg(not(any(v3_24, v3_23, v3_22, v3_21, v3_20, v3_19, v3_18, v3_17, v3_16, v3_15, v3_14, v3_13, v3_12)))] // since v3_25
+    #[cfg(not(any(v3_24, v3_23, v3_22, v3_21, v3_20, v3_19)))] // since v3_25
     pub fn IupDropButton(dropchild: *mut Ihandle) -> *mut Ihandle;
-    #[cfg(not(any(v3_24, v3_23, v3_22, v3_21, v3_20, v3_19, v3_18, v3_17, v3_16, v3_15, v3_14, v3_13, v3_12)))] // since v3_25
+    #[cfg(not(any(v3_24, v3_23, v3_22, v3_21, v3_20, v3_19)))] // since v3_25
     pub fn IupFlatLabel(title: *const c_char) -> *mut Ihandle;
-    #[cfg(not(any(v3_24, v3_23, v3_22, v3_21, v3_20, v3_19, v3_18, v3_17, v3_16, v3_15, v3_14, v3_13, v3_12)))] // since v3_25
+    #[cfg(not(any(v3_24, v3_23, v3_22, v3_21, v3_20, v3_19)))] // since v3_25
     pub fn IupFlatSeparator() -> *mut Ihandle;
     pub fn IupCanvas(action: *const c_char) -> *mut Ihandle;
     pub fn IupDialog(child: *mut Ihandle) -> *mut Ihandle;
     pub fn IupUser() -> *mut Ihandle;
-    #[cfg(not(any(v3_27, v3_26, v3_25, v3_24, v3_23, v3_22, v3_21, v3_20, v3_19, v3_18, v3_17, v3_16, v3_15, v3_14, v3_13, v3_12)))] // since v3_28
+    #[cfg(not(any(v3_27, v3_26, v3_25, v3_24, v3_23, v3_22, v3_21, v3_20, v3_19)))] // since v3_28
     pub fn IupThread() -> *mut Ihandle;
     pub fn IupLabel(title: *const c_char) -> *mut Ihandle;
     pub fn IupList(action: *const c_char) -> *mut Ihandle;
-    #[cfg(not(any(v3_26, v3_25, v3_24, v3_23, v3_22, v3_21, v3_20, v3_19, v3_18, v3_17, v3_16, v3_15, v3_14, v3_13, v3_12)))] // since v3_27
+    #[cfg(not(any(v3_26, v3_25, v3_24, v3_23, v3_22, v3_21, v3_20, v3_19)))] // since v3_27
     pub fn IupFlatList() -> *mut Ihandle;
     pub fn IupText(action: *const c_char) -> *mut Ihandle;
     pub fn IupMultiLine(action: *const c_char) -> *mut Ihandle;
@@ -297,43 +379,39 @@ extern {
     pub fn IupClipboard() -> *mut Ihandle;
     pub fn IupProgressBar() -> *mut Ihandle;
     pub fn IupVal(r#type: *const c_char) -> *mut Ihandle;
-    #[cfg(not(any(v3_27, v3_26, v3_25, v3_24, v3_23, v3_22, v3_21, v3_20, v3_19, v3_18, v3_17, v3_16, v3_15, v3_14, v3_13, v3_12)))] // since v3_28
+    #[cfg(not(any(v3_27, v3_26, v3_25, v3_24, v3_23, v3_22, v3_21, v3_20, v3_19)))] // since v3_28
     pub fn IupFlatVal(r#type: *const c_char) -> *mut Ihandle;
-    #[cfg(not(any(v3_28, v3_27, v3_26, v3_25, v3_24, v3_23, v3_22, v3_21, v3_20, v3_19, v3_18, v3_17, v3_16, v3_15, v3_14, v3_13, v3_12)))] // since v3_29
+    #[cfg(not(any(v3_28, v3_27, v3_26, v3_25, v3_24, v3_23, v3_22, v3_21, v3_20, v3_19)))] // since v3_29
     pub fn IupFlatTree() -> *mut Ihandle;
     pub fn IupTabs(child: *mut Ihandle, ...) -> *mut Ihandle;
     pub fn IupTabsv(children: *mut *mut Ihandle) -> *mut Ihandle;
-    #[cfg(not(any(v3_20, v3_19, v3_18, v3_17, v3_16, v3_15, v3_14, v3_13, v3_12)))] // since v3_21
+    #[cfg(not(any(v3_20, v3_19)))] // since v3_21
     pub fn IupFlatTabs(first: *mut Ihandle, ...) -> *mut Ihandle;
-    #[cfg(not(any(v3_20, v3_19, v3_18, v3_17, v3_16, v3_15, v3_14, v3_13, v3_12)))] // since v3_21
+    #[cfg(not(any(v3_20, v3_19)))] // since v3_21
     pub fn IupFlatTabsv(children: *mut *mut Ihandle) -> *mut Ihandle;
     pub fn IupTree() -> *mut Ihandle;
     pub fn IupLink(url: *const c_char, title: *const c_char) -> *mut Ihandle;
-    #[cfg(not(any(v3_16, v3_15, v3_14, v3_13, v3_12)))] // since v3_17
-    pub fn IupAnimatedLabel(animation: *mut Ihandle) -> *mut Ihandle;
-    #[cfg(not(any(v3_16, v3_15, v3_14, v3_13, v3_12)))] // since v3_17
-    pub fn IupDatePick() -> *mut Ihandle;
-    #[cfg(not(any(v3_16, v3_15, v3_14, v3_13, v3_12)))] // since v3_17
-    pub fn IupCalendar() -> *mut Ihandle;
-    #[cfg(not(any(v3_23, v3_22, v3_21, v3_20, v3_19, v3_18, v3_17, v3_16, v3_15, v3_14, v3_13, v3_12)))] // since v3_24
+    pub fn IupAnimatedLabel(animation: *mut Ihandle) -> *mut Ihandle; // since v3_17
+    pub fn IupDatePick() -> *mut Ihandle; // since v3_17
+    pub fn IupCalendar() -> *mut Ihandle; // since v3_17
+    #[cfg(not(any(v3_23, v3_22, v3_21, v3_20, v3_19)))] // since v3_24
     pub fn IupColorbar() -> *mut Ihandle;
-    #[cfg(not(any(v3_23, v3_22, v3_21, v3_20, v3_19, v3_18, v3_17, v3_16, v3_15, v3_14, v3_13, v3_12)))] // since v3_24
+    #[cfg(not(any(v3_23, v3_22, v3_21, v3_20, v3_19)))] // since v3_24
     pub fn IupGauge() -> *mut Ihandle;
-    #[cfg(not(any(v3_23, v3_22, v3_21, v3_20, v3_19, v3_18, v3_17, v3_16, v3_15, v3_14, v3_13, v3_12)))] // since v3_24
+    #[cfg(not(any(v3_23, v3_22, v3_21, v3_20, v3_19)))] // since v3_24
     pub fn IupDial(r#type: *const c_char) -> *mut Ihandle;
-    #[cfg(not(any(v3_23, v3_22, v3_21, v3_20, v3_19, v3_18, v3_17, v3_16, v3_15, v3_14, v3_13, v3_12)))] // since v3_24
+    #[cfg(not(any(v3_23, v3_22, v3_21, v3_20, v3_19)))] // since v3_24
     pub fn IupColorBrowser() -> *mut Ihandle;
 
     /************************************************************************/
     /*                      Utilities                                       */
     /************************************************************************/
     /* String compare utility */
-    #[cfg(not(any(v3_16, v3_15, v3_14, v3_13, v3_12)))] // since v3_17
-    pub fn IupStringCompare(str1: *const c_char, str2: *const c_char, casesensitive: c_int, lexicographic: c_int) -> c_int;
+    pub fn IupStringCompare(str1: *const c_char, str2: *const c_char, casesensitive: c_int, lexicographic: c_int) -> c_int; // since v3_17
 
     /* IupImage utilities */
     pub fn IupSaveImageAsText(ih: *mut Ihandle, filename: *const c_char, format: *const c_char, name: *const c_char) -> c_int;
-    #[cfg(not(any(v3_27, v3_26, v3_25, v3_24, v3_23, v3_22, v3_21, v3_20, v3_19, v3_18, v3_17, v3_16, v3_15, v3_14, v3_13, v3_12)))] // since v3_28
+    #[cfg(not(any(v3_27, v3_26, v3_25, v3_24, v3_23, v3_22, v3_21, v3_20, v3_19)))] // since v3_28
     pub fn IupImageGetHandle(name: *const c_char) -> *mut Ihandle;
 
     /* IupText and IupScintilla utilities */
@@ -347,7 +425,7 @@ extern {
     pub fn IupTreeSetUserId(ih: *mut Ihandle, id: c_int, userid: *mut c_void) -> c_int;
     pub fn IupTreeGetUserId(ih: *mut Ihandle, id: c_int) -> *mut c_void;
     pub fn IupTreeGetId(ih: *mut Ihandle, userid: *mut c_void) -> c_int;
-    #[deprecated(since = "3.21", note = "use IupSetAttributeHandleId")]
+    #[deprecated(since = "3.21.0", note = "use IupSetAttributeHandleId")]
     pub fn IupTreeSetAttributeHandle(ih: *mut Ihandle, name: *const c_char, id: c_int, ih_named: *mut Ihandle);
 
     /************************************************************************/
@@ -362,9 +440,9 @@ extern {
     pub fn IupGetFile(arq: *mut c_char) -> c_int;
     pub fn IupMessage(title: *const c_char, msg: *const c_char);
     pub fn IupMessagef(title: *const c_char, format: *const c_char, ...);
-    #[cfg(not(any(v3_21, v3_20, v3_19, v3_18, v3_17, v3_16, v3_15, v3_14, v3_13, v3_12)))] // since v3_22
+    #[cfg(not(any(v3_21, v3_20, v3_19)))] // since v3_22
     pub fn IupMessageError(parent: *mut Ihandle, message: *const c_char);
-    #[cfg(not(any(v3_21, v3_20, v3_19, v3_18, v3_17, v3_16, v3_15, v3_14, v3_13, v3_12)))] // since v3_22
+    #[cfg(not(any(v3_21, v3_20, v3_19)))] // since v3_22
     pub fn IupMessageAlarm(parent: *mut Ihandle, title: *const c_char, message: *const c_char, buttons: *const c_char) -> c_int;
     pub fn IupAlarm(title: *const c_char, msg: *const c_char, b1: *const c_char, b2: *const c_char, b3: *const c_char) -> c_int;
     pub fn IupScanf(format: *const c_char, ...) -> c_int;
@@ -380,10 +458,7 @@ extern {
 
     pub fn IupGetParam(title: *const c_char, action: Iparamcb, user_data: *mut c_void, format: *const c_char, ...) -> c_int;
     pub fn IupGetParamv(title: *const c_char, action: Iparamcb, user_data: *mut c_void, format: *const c_char, param_count: c_int, param_extra: c_int, param_data: *mut *mut c_void) -> c_int;
-    #[cfg(not(any(v3_18, v3_17, v3_16, v3_15, v3_14, v3_13, v3_12)))] // since v3_19
-    pub fn IupParam(format: *const c_char) -> *mut Ihandle;
-    #[cfg(any(v3_13, v3_14, v3_15, v3_16, v3_17, v3_18))] // between v3_13 and v3_18
-    pub fn IupParamf(format: *const c_char) -> *mut Ihandle;
+    pub fn IupParam(format: *const c_char) -> *mut Ihandle; // since v3_19
 
     // signature of IupParamBox changed from 3.18 -> 3.19
     #[cfg(any(v3_13, v3_14, v3_15, v3_16, v3_17, v3_18))] // between v3_13 and v3_18
@@ -391,8 +466,7 @@ extern {
     #[cfg(any(warningABI, v3_19, v3_20, v3_21, v3_22, v3_23, v3_24, v3_25, v3_26, v3_27, v3_28, v3_29, v3_30))] // since v3_19
     pub fn IupParamBox(param: *mut Ihandle, ...) -> *mut Ihandle;
 
-    #[cfg(not(any(v3_18, v3_17, v3_16, v3_15, v3_14, v3_13, v3_12)))] // since v3_19
-    pub fn IupParamBoxv(param_array: *mut *mut Ihandle) -> *mut Ihandle;
+    pub fn IupParamBoxv(param_array: *mut *mut Ihandle) -> *mut Ihandle; // since v3_19
     pub fn IupLayoutDialog(dialog: *mut Ihandle) -> *mut Ihandle;
 
     // signature of IupElementPropertiesDialog changed from 3.27 -> 3.28
@@ -401,9 +475,9 @@ extern {
     #[cfg(any(warningABI, v3_28, v3_29, v3_30))] // since v3_28
     pub fn IupElementPropertiesDialog(parent: *mut Ihandle, elem: *mut Ihandle) -> *mut Ihandle;
 
-    #[cfg(not(any(v3_26, v3_25, v3_24, v3_23, v3_22, v3_21, v3_20, v3_19, v3_18, v3_17, v3_16, v3_15, v3_14, v3_13, v3_12)))] // since v3_27
+    #[cfg(not(any(v3_26, v3_25, v3_24, v3_23, v3_22, v3_21, v3_20, v3_19)))] // since v3_27
     pub fn IupGlobalsDialog() -> *mut Ihandle;
-    #[cfg(not(any(v3_27, v3_26, v3_25, v3_24, v3_23, v3_22, v3_21, v3_20, v3_19, v3_18, v3_17, v3_16, v3_15, v3_14, v3_13, v3_12)))] // since v3_28
+    #[cfg(not(any(v3_27, v3_26, v3_25, v3_24, v3_23, v3_22, v3_21, v3_20, v3_19)))] // since v3_28
     pub fn IupClassInfoDialog(parent: *mut Ihandle) -> *mut Ihandle;
 } // extern
 
@@ -433,15 +507,15 @@ pub const IUP_RIGHT: c_int        = 0xFFFD;  /* 65533 */
 pub const IUP_MOUSEPOS: c_int     = 0xFFFC;  /* 65532 */
 pub const IUP_CURRENT: c_int      = 0xFFFB;  /* 65531 */
 pub const IUP_CENTERPARENT: c_int = 0xFFFA;  /* 65530 */
-#[cfg(not(any(v3_28, v3_27, v3_26, v3_25, v3_24, v3_23, v3_22, v3_21, v3_20, v3_19, v3_18, v3_17, v3_16, v3_15, v3_14, v3_13, v3_12)))] // since v3_29
+#[cfg(not(any(v3_28, v3_27, v3_26, v3_25, v3_24, v3_23, v3_22, v3_21, v3_20, v3_19)))] // since v3_29
 pub const IUP_LEFTPARENT: c_int   = 0xFFF9;  /* 65529 */
-#[cfg(not(any(v3_28, v3_27, v3_26, v3_25, v3_24, v3_23, v3_22, v3_21, v3_20, v3_19, v3_18, v3_17, v3_16, v3_15, v3_14, v3_13, v3_12)))] // since v3_29
+#[cfg(not(any(v3_28, v3_27, v3_26, v3_25, v3_24, v3_23, v3_22, v3_21, v3_20, v3_19)))] // since v3_29
 pub const IUP_RIGHTPARENT: c_int  = 0xFFF8;  /* 65528 */
 pub const IUP_TOP: c_int          = IUP_LEFT;
 pub const IUP_BOTTOM: c_int       = IUP_RIGHT;
-#[cfg(not(any(v3_28, v3_27, v3_26, v3_25, v3_24, v3_23, v3_22, v3_21, v3_20, v3_19, v3_18, v3_17, v3_16, v3_15, v3_14, v3_13, v3_12)))] // since v3_29
+#[cfg(not(any(v3_28, v3_27, v3_26, v3_25, v3_24, v3_23, v3_22, v3_21, v3_20, v3_19)))] // since v3_29
 pub const IUP_TOPPARENT: c_int    = IUP_LEFTPARENT;
-#[cfg(not(any(v3_28, v3_27, v3_26, v3_25, v3_24, v3_23, v3_22, v3_21, v3_20, v3_19, v3_18, v3_17, v3_16, v3_15, v3_14, v3_13, v3_12)))] // since v3_29
+#[cfg(not(any(v3_28, v3_27, v3_26, v3_25, v3_24, v3_23, v3_22, v3_21, v3_20, v3_19)))] // since v3_29
 pub const IUP_BOTTOMPARENT: c_int = IUP_RIGHTPARENT;
 
 /************************************************************************/
@@ -502,17 +576,15 @@ pub unsafe fn iup_isbutton5(s: *const c_char) -> bool { *s.offset(9) == '5' as c
 /************************************************************************/
 /*                      Pre-Defined Masks                               */
 /************************************************************************/
-pub const IUP_MASK_FLOAT: &'static str       = "[+/-]?(/d+/.?/d*|/./d+)";
-pub const IUP_MASK_UFLOAT: &'static str      =       "(/d+/.?/d*|/./d+)";
-pub const IUP_MASK_EFLOAT: &'static str      = "[+/-]?(/d+/.?/d*|/./d+)([eE][+/-]?/d+)?";
-#[cfg(not(any(v3_22, v3_21, v3_20, v3_19, v3_18, v3_17, v3_16, v3_15, v3_14, v3_13, v3_12)))] // since v3_23
-pub const IUP_MASK_UEFLOAT: &'static str     =       "(/d+/.?/d*|/./d+)([eE][+/-]?/d+)?";
-#[cfg(not(any(v3_12)))] // since v3_13
-pub const IUP_MASK_FLOATCOMMA: &'static str  = "[+/-]?(/d+/,?/d*|/,/d+)";
-#[cfg(not(any(v3_12)))] // since v3_13
-pub const IUP_MASK_UFLOATCOMMA: &'static str =       "(/d+/,?/d*|/,/d+)";
-pub const IUP_MASK_INT: &'static str         =  "[+/-]?/d+";
-pub const IUP_MASK_UINT: &'static str        =        "/d+";
+pub const IUP_MASK_FLOAT: &str       = "[+/-]?(/d+/.?/d*|/./d+)";
+pub const IUP_MASK_UFLOAT: &str      =       "(/d+/.?/d*|/./d+)";
+pub const IUP_MASK_EFLOAT: &str      = "[+/-]?(/d+/.?/d*|/./d+)([eE][+/-]?/d+)?";
+#[cfg(not(any(v3_22, v3_21, v3_20, v3_19)))] // since v3_23
+pub const IUP_MASK_UEFLOAT: &str     =       "(/d+/.?/d*|/./d+)([eE][+/-]?/d+)?";
+pub const IUP_MASK_FLOATCOMMA: &str  = "[+/-]?(/d+/,?/d*|/,/d+)"; // since v3_13
+pub const IUP_MASK_UFLOATCOMMA: &str =       "(/d+/,?/d*|/,/d+)"; // since v3_13
+pub const IUP_MASK_INT: &str         =  "[+/-]?/d+";
+pub const IUP_MASK_UINT: &str        =        "/d+";
 
 /************************************************************************/
 /*                   IupGetParam Callback situations                    */
@@ -521,9 +593,8 @@ pub const IUP_GETPARAM_BUTTON1: c_int = -1;
 pub const IUP_GETPARAM_INIT: c_int    = -2;
 pub const IUP_GETPARAM_BUTTON2: c_int = -3;
 pub const IUP_GETPARAM_BUTTON3: c_int = -4;
-#[cfg(not(any(v3_12)))] // since v3_13
-pub const IUP_GETPARAM_CLOSE: c_int   = -5;
-#[cfg(not(any(v3_20, v3_19, v3_18, v3_17, v3_16, v3_15, v3_14, v3_13, v3_12)))] // since v3_21
+pub const IUP_GETPARAM_CLOSE: c_int   = -5; // since v3_13
+#[cfg(not(any(v3_20, v3_19)))] // since v3_21
 pub const IUP_GETPARAM_MAP: c_int     = -6;
 pub const IUP_GETPARAM_OK: c_int      = IUP_GETPARAM_BUTTON1;
 pub const IUP_GETPARAM_CANCEL: c_int  = IUP_GETPARAM_BUTTON2;
@@ -532,9 +603,9 @@ pub const IUP_GETPARAM_HELP: c_int    = IUP_GETPARAM_BUTTON3;
 /************************************************************************/
 /*                   Used by IupColorbar                                */
 /************************************************************************/
-#[cfg(not(any(v3_23, v3_22, v3_21, v3_20, v3_19, v3_18, v3_17, v3_16, v3_15, v3_14, v3_13, v3_12)))] // since v3_24
+#[cfg(not(any(v3_23, v3_22, v3_21, v3_20, v3_19)))] // since v3_24
 pub const IUP_PRIMARY: c_int   = -1;
-#[cfg(not(any(v3_23, v3_22, v3_21, v3_20, v3_19, v3_18, v3_17, v3_16, v3_15, v3_14, v3_13, v3_12)))] // since v3_24
+#[cfg(not(any(v3_23, v3_22, v3_21, v3_20, v3_19)))] // since v3_24
 pub const IUP_SECONDARY: c_int = -2;
 
 /************************************************************************/

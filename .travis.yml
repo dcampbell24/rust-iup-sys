@@ -1,6 +1,7 @@
+dist: bionic
 env:
   global:
-    - IUP_DL='http://sourceforge.net/projects/iup/files/3.14/Linux%20Libraries/iup-3.14_Linux32_64_lib.tar.gz'
+    - IUP_DL='https://sourceforge.net/projects/iup/files/3.29/Linux%20Libraries/iup-3.29_Linux415_64_lib.tar.gz'
 
 language: rust
 
