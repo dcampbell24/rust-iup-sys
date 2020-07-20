@@ -23,30 +23,18 @@ fn parse_version_string(r#in: &str, prefix: &str) -> String {
 
 fn main() {
     /* IUP library binary detection */
-    match libloading::Library::new(if cfg!(unix) {"libiup.so"}
+    if let Ok(lib_dyn) = libloading::Library::new(if cfg!(unix) {"libiup.so"}
                                                   else if cfg!(macos) {"libiup.dylib"}
                                                   else if cfg!(windows) {"iup"}
                                                   else {"unknown_library_iup"} )
     {
-        Ok(lib_dyn) =>
-            unsafe {
-                let func_dyn: libloading::Symbol<VFunc1> = lib_dyn.get(b"IupVersion").unwrap();
-                let cargo_string = parse_version_string(CStr::from_ptr(func_dyn()).to_str().unwrap(), "v");
-                println!("cargo:IUPVERSION={}", &cargo_string.as_str()[16..]);
-            },
-        Err(e) => {
-            match &e {
-                libloading::Error::DlOpen { desc: _ } => {
-                    println!("libloading::Error::DlOpen: {}", e);
-                },
-                libloading::Error::DlOpenUnknown  => { println!("failed_2: {}", e); },
-                libloading::Error::DlSym { desc: _ } => { println!("failed_3: {}", e); },
-                libloading::Error::DlSymUnknown  => { println!("failed_4: {}", e); },
-                _  => { println!("failed_5: {}", e); },
-            }
-            unreachable!(); // intentionally panic if IUP is not installed or detectable this way
+        unsafe {
+            let func_dyn: libloading::Symbol<VFunc1> = lib_dyn.get(b"IupVersion").unwrap();
+            let cargo_string = parse_version_string(CStr::from_ptr(func_dyn()).to_str().unwrap(), "v");
+            println!("cargo:IUPVERSION={}", &cargo_string.as_str()[16..]);
         }
     }
+    else { unreachable!(); } // intentionally panic if IUP is not installed or detectable this way
 
 
     /* CD library binary detection  */

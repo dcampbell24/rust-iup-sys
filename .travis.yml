@@ -16,10 +16,7 @@ install:
   - (cd iup_libs/ && echo -ne '\n' | sudo ./install)
   - sudo cp iup_libs/ftgl/lib/Linux415_64/libftgl.so /usr/lib/
   - sudo ldconfig /usr/lib/
-  #- sudo ldconfig -p
-  #- ls -lh /usr/lib/libiup*
-  #- ls -lh /usr/lib/libftgl.so
-  - ldd /usr/lib/libiup.so
+  #- ldd /usr/lib/libiup.so
   - rm -rf iup_libs/
 
 script:
