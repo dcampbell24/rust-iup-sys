@@ -13,9 +13,9 @@ install:
   # By piping a newline to ./install, we skip the enter prompt
   - (cd iup_libs/ && echo -ne '\n' | sudo ./install)
   - sudo cp iup_libs/ftgl/lib/Linux415_64/libftgl.so /usr/lib/
-  - sudo ldconfig
+  - sudo ldconfig /usr/lib
   - rm -rf iup_libs/
 
 script:
-  - cargo build -v
+  - cargo build -vv
   - cargo test -v
