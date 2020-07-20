@@ -19,6 +19,7 @@ install:
   - sudo ldconfig -p
   - ls -lh /usr/lib/libiup*
   - ls -lh /usr/lib/libftgl.so
+  - ldd /usr/lib/libiup.so
   - rm -rf iup_libs/
 
 script:
