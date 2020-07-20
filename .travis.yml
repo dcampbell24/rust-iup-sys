@@ -12,7 +12,7 @@ install:
   - tar -xzvf iup_libs.tar.gz -C iup_libs/
   # By piping a newline to ./install, we skip the enter prompt
   - (cd iup_libs/ && echo -ne '\n' | sudo ./install)
-  - sudo cp ftgl/lib/Linux415_64/libftgl.so /usr/lib/
+  - sudo cp iup_libs/ftgl/lib/Linux415_64/libftgl.so /usr/lib/
   - sudo ldconfig
   - rm -rf iup_libs/
 
