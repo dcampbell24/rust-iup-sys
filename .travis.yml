@@ -3,11 +3,16 @@ dist: bionic
 env:
   global:
     - IUP_DL='https://sourceforge.net/projects/iup/files/3.29/Linux%20Libraries/iup-3.29_Linux415_64_lib.tar.gz'
+    - CD_DL='https://sourceforge.net/projects/canvasdraw/files/5.13/Linux%20Libraries/cd-5.13_Linux415_64_lib.tar.gz'
+    - IM_DL='https://sourceforge.net/projects/imtoolkit/files/3.14/Linux%20Libraries/im-3.14_Linux415_64_lib.tar.gz'
 
 language: rust
 
 install:
   - sudo apt-get -y install libgtk-3-0
+  - sudo apt-get -y install libwebkitgtk-3.0-0
+  - sudo apt-get -y install libglu1-mesa
+
   # Download and install IUP
   - mkdir iup_libs/
   - wget $IUP_DL -O iup_libs.tar.gz
@@ -15,9 +20,29 @@ install:
   # By piping a newline to ./install, we skip the enter prompt
   - (cd iup_libs/ && echo -ne '\n' | sudo ./install)
   - sudo cp iup_libs/ftgl/lib/Linux415_64/libftgl.so /usr/lib/
+
+  # Download and install CD
+  - mkdir cd_libs/
+  - wget $CD_DL -O cd_libs.tar.gz
+  - tar -xzvf cd_libs.tar.gz -C cd_libs/
+  # By piping a newline to ./install, we skip the enter prompt
+  - (cd cd_libs/ && echo -ne '\n' | sudo ./install)
+
+  # Download and install IM
+  - mkdir im_libs/
+  - wget $IM_DL -O im_libs.tar.gz
+  - tar -xzvf im_libs.tar.gz -C im_libs/
+  # By piping a newline to ./install, we skip the enter prompt
+  - (cd im_libs/ && echo -ne '\n' | sudo ./install)
+
   - sudo ldconfig /usr/lib/
   #- ldd /usr/lib/libiup.so
+  - ldd /usr/lib/libcd.so
+  - ldd /usr/lib/libim.so
+  - ldd /usr/lib/libftgl.so
   - rm -rf iup_libs/
+  - rm -rf cd_libs/
+  - rm -rf im_libs/
 
 script:
   - cargo build -vv
