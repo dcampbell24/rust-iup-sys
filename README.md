@@ -49,7 +49,7 @@ E.g. the additional controls of iupcontrols.h like IupMatrix are accessible only
 IupPlot is accessible only if CD is installed and the installation of IUP-supplied ftgl library was detected.
 
 Thus my recommendation is to install all of IUP, CD and IM pre-built binaries in most recent versions: It's easy on Linux using the bash script: Run
-sudo ./install
+sudo ./install && ldconfig
 from within the extracted "Linux Libraries" tarball folders.
 (If there is sufficient demand, I can also include building those from sources by build.rs).
 'build.rs' will care for everything else like configuring the binding based on detection results, linking required binaries and pushing it's detection findings to a
